@@ -10,5 +10,5 @@ Please ensure that the following are fulfilled before you can proceed to run the
 - MSP432 -> Code Composer
 
 # Hardware
-Wheel Encoder -> 
-Barcode Reader -> MH-Sensor-Series
+- Wheel Encoder -> 
+- Barcode Reader -> MH-Sensor-Series
