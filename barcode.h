@@ -6,7 +6,7 @@
         #include "driverlib.h"
     #endif
 
-    #define TIMER_PERIOD 65535
+    #define TIMER_PERIOD 32768
 
     /* Standard Includes */
     #include <stdint.h>

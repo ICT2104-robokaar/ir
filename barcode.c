@@ -317,7 +317,7 @@ void ADC14_IRQHandler(void)
 //
 //            // check no. of 1s
 //            threeOnes = checkOnes(codeP1);
-//            threeOnes = checkOnes(codeP2);
+           threeOnes = checkOnes(codeP2);
 //            threeOnes = checkOnes(codeP3);
 
             //match code
