@@ -1,4 +1,3 @@
-
 /* Header files */
 #include "driverlib.h"
 #include <stdbool.h>
@@ -12,9 +11,10 @@
 void declareTimer(void);
 void declarePins(void);
 void declareInterrupts (void);
+void timerInit(void);
 void PORT3_IRQHandler(void);
 void TA2_0_IRQHandler(void);
-
+void getSpeed(void);
 
 const int notchTOrotation= 20;
 
@@ -26,15 +26,20 @@ volatile int leftCounter= 0;
 volatile int rightCounter= 0;
 
 
-void declareTimer (void)
+void encoder(void)
+{
+
+}
+
+void declareTimer(void)
 {
     WDT_A_holdTimer();
 
     // Set up Timer_A2, used for interrupt count check, (1MHz clock).
     const Timer_A_UpModeConfig upConfig = {
         TIMER_A_CLOCKSOURCE_SMCLK,          // SMCLK Clock Source
-        TIMER_A_CLOCKSOURCE_DIVIDER_3,      // SMCLK/3 = 1MHz
-        TIME_PERIOD,                 // 2000 tick period
+        TIMER_A_CLOCKSOURCE_DIVIDER_3,      // SMCLK/3 = 1MHz -->
+        TIME_PERIOD,                 // 2000 tick period -->2 secs
         TIMER_A_TAIE_INTERRUPT_DISABLE,     // Disable Timer interrupt
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // Enable CCR0 interrupt
         TIMER_A_DO_CLEAR                    // Clear value
@@ -42,7 +47,7 @@ void declareTimer (void)
     Timer_A_configureUpMode(TIMER_A2_BASE, &upConfig);
     Timer_A_clearTimer(TIMER_A2_BASE);
 }
-void declarePins (void)
+void declarePins(void)
 {
     // Left Encoder & Right Encoder
     GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3);
@@ -51,7 +56,7 @@ void declarePins (void)
     GPIO_interruptEdgeSelect(
         GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3, GPIO_LOW_TO_HIGH_TRANSITION);
 }
-void declareInterrupts (void)
+void declareInterrupts(void)
 {
     // Clear pin's interrupt flag for P3.2 & P3.3
     GPIO_clearInterruptFlag(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3);
@@ -63,6 +68,14 @@ void declareInterrupts (void)
     Interrupt_enableInterrupt(INT_PORT3);
     Interrupt_enableInterrupt(INT_TA2_0);
 }
+/* start the timer counter */
+void timerInit(void)
+{
+    Timer_A_startCounter(TIMER_A2_BASE, TIMER_A_UP_MODE);
+    timeTaken += 1
+}
+
+/* get the notches accumulated */
 void PORT3_IRQHandler(void)
 {
     uint32_t status;
@@ -72,36 +85,38 @@ void PORT3_IRQHandler(void)
     if (status & GPIO_PIN2)
     {
        notchesDectected++;
-	leftNotches = notchesDectected;
-	if(leftNotches % notchTOrotation == 0) 
-	{
-		leftCounter++; 
-	}
+    leftNotches = notchesDectected;
+    if(leftNotches % notchTOrotation == 0)
+    {
+        leftCounter++;
+    }
 }
     if (status & GPIO_PIN3)
     {
        notchesDectected++;
-	rightNotches = notchesDectected;
-	if(rightNotches % notchTOrotation == 0) 
-	{
-		rightCounter++; 
-	}
+    rightNotches = notchesDectected;
+    if(rightNotches % notchTOrotation == 0)
+    {
+        rightCounter++;
     }
 
     GPIO_clearInterruptFlag(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3);
-    
+
 }
+
+/* get the timer value */
 void TA2_0_IRQHandler(void)
 {
     if (timeTaken % 5000 == 0) //check every 5seconds
     {
-        leftTimer++;
-        rightTimer++;
+        currTime = Timer_A_getCounterValue(TIMER_A2_BASE)
     }
     Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
 }
+
+/* calculate speed for the robotic car */
 void getSpeed(void)
 {
-     speed = ((leftNotches + rightNotches)/2)/(leftTimer + rightTimer)
-     return speed;	
-} 
+     speed = ((leftNotches + rightNotches)/2)/currTime
+     return speed;
+}
