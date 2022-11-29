@@ -129,7 +129,8 @@ void TA1_0_IRQHandler(void)
 {
     mulCount++;
     printf("32 secs\n");
-    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,
+                                             TIMER_A_CAPTURECOMPARE_REGISTER_0);
 }
 
 /* ADC Interrupt Handler. This handler is called whenever there is a conversion that is finished for ADC_MEM0. */
@@ -145,17 +146,47 @@ void ADC14_IRQHandler(void)
 
     uint64_t status = MAP_ADC14_getEnabledInterruptStatus();
     MAP_ADC14_clearInterruptFlag(status);
+    int result =0;
 
     if (ADC_INT0 & status)
     {
         curADCResult = MAP_ADC14_getResult(ADC_MEM0);
 
+        //Implementing Moving average
+        int val0 = 0;
+        int val1 = 0;
+        int val2 = 0;
+        int val3 = 0;
+        int val4 = 0;
+        int val5 = 0;
+        int val6 = 0;
+        int val7 = 0;
+        int val8 = 0;
+        int val9 = 0;
+        int val10 = 0;
+
+        val10 = val9;
+        val9 = val8;
+        val8 = val7;
+        val7 = val6;
+        val6 = val5;
+        val5 = val4;
+        val4 = val3;
+        val3 = val2;
+        val2 = val1;
+        val1 = val0;
+        val0 = curADCResult;
+
+        result = (val0 + val1 + val2+ val3+ val4 + val5 + val6 + val7 + val8 + val9 + val10)/10;
+
+
         /*Check if an transition occured*/
         prev = curr;
 
         /* If white surface is detected, turn on P1.0 */
-        if (curADCResult < 8000)
+        if (result < 1000)
         {
+            /*Remove this*/
             GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
             isWhiteBar = true;
             isBlackBar = false;
@@ -164,6 +195,7 @@ void ADC14_IRQHandler(void)
         else
         {
             /*If Black surface*/
+            /*Remove this*/
             GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
             isBlackBar = true;
             isWhiteBar = false;
@@ -311,13 +343,13 @@ void ADC14_IRQHandler(void)
             createCode(timerValuesP1, timerValuesP1[thickBar], codeP1);
             createCode(timerValuesP2, timerValuesP1[thickBar], codeP2);
             createCode(timerValuesP3, timerValuesP1[thickBar], codeP3);
-//            printf("decodeP1: %s\n", codeP1);
-//            printf("decodeP2: %s\n", codeP2);
-//            printf("decodeP3: %s\n", codeP3);
+            printf("decodeP1: %s\n", codeP1);
+            printf("decodeP2: %s\n", codeP2);
+            printf("decodeP3: %s\n", codeP3);
 //
 //            // check no. of 1s
 //            threeOnes = checkOnes(codeP1);
-           threeOnes = checkOnes(codeP2);
+//            threeOnes = checkOnes(codeP2);
 //            threeOnes = checkOnes(codeP3);
 
             //match code
@@ -405,12 +437,10 @@ bool checkOnes(char code[]){
     }
 }
 
-//Function that return the 
 void getBarcode(char decoded1[4], char x[4]){
     strcpy(x, decoded1);
 }
 
-//Function to decode the barcode
 void matchCode(char *code, char *decoded, bool asterixMatch){
     char *decode[] = {"A", "1000010010", "B", "0010010010", "C", "1010010000", "D", "0000110010",
                       "E", "1000110000", "F", "0010110000", "G", "0000011010", "H", "1000011000",
@@ -419,7 +449,6 @@ void matchCode(char *code, char *decoded, bool asterixMatch){
                       "Q", "0000001110", "R", "1000001100", "S", "0010001100", "T", "0000101100",
                       "U", "1100000010", "V", "0110000010", "W", "1110000000", "X", "0100100010",
                       "Y", "1100100000", "Z", "0110100000", "*", "0100101000"};
-
     char *backwardDecode[] = {"A", "1001000010", "B", "1001001000", "C", "0001001010", "D", "1001100000",
                               "E", "0001100010", "F", "0001101000", "G", "1011000000", "H", "0011000010",
                               "I", "0011001000", "J", "0011100000", "K", "1100000010", "L", "1100001000",
